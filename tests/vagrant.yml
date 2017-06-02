@@ -1,0 +1,70 @@
+---
+# file: roles/deformation-fields/tests/vagrant.yml
+
+- hosts: all
+  remote_user: vagrant
+  pre_tasks:
+
+    - name: "assign local user to var 'fact_controller_user' via set_fact"
+      set_fact: fact_controller_user="{{ lookup('env','USER') }}"
+
+    - debug: var=fact_controller_user
+
+    - set_fact: fact_controller_home="{{ lookup('env','HOME') }}"
+    - debug: var=fact_controller_home
+
+    - set_fact: fact_project_path="{{ lookup('pipe','pwd') }}"
+    - debug: var=fact_project_path
+
+    - set_fact: fact_role_path="{{ lookup('pipe','pwd') }}/roles/acemenu"
+    - debug: var=fact_role_path
+
+
+  vars:
+
+    - deformation_fields_debug       : True
+    - deformation_fields_state       : 'present' # 'present', 'absent', 'purge'
+
+    - deformation_fields_ver         : 'v6.0.0'
+    - deformation_fields_archive     : 'deformation_fields-Linux-centos6_x86_64-stable-pub-{{ deformation_fields_ver }}.tar.gz'
+
+
+    - deformation_fields_remote_user            : 'vagrant'
+    - deformation_fields_remote_home            : '/home/{{ deformation_fields_remote_user }}'
+    - deformation_fields_controller_user        : '{{ fact_controller_user }}'
+    - deformation_fields_deployment_user        : '{{ deformation_fields_remote_user }}'
+    - deformation_fields_remote_deployment_user : '{{ deformation_fields_deployment_user }}'
+
+    - deformation_fields_local_resource_directory : '../../../ace_resources/sys/sw/Ubuntu/16.04/deformation_fields/{{ deformation_fields_ver }}'
+    - deformation_fields_local_resource_path      : '{{ deformation_fields_local_resource_directory }}/{{ deformation_fields_archive }}'
+
+    - deformation_fields_remote_resource_directory : '{{ deformation_fields_remote_home }}/sys/sw/Ubuntu/16.04/deformation_fields/{{ deformation_fields_ver }}'
+    - deformation_fields_remote_resource_path      : '{{ deformation_fields_remote_resource_directory }}/{{ deformation_fields_archive }}'
+
+    - deformation_fields_ensure_dirs_on_remote:
+
+        deformation_fields_remote_resource_dir:
+
+          state          : 'directory'
+          path           : '{{ deformation_fields_remote_resource_directory }}'
+          owner          : '{{ deformation_fields_remote_user }}'
+          group          : '{{ deformation_fields_remote_user }}'
+          mode           : '0755'
+
+    - deformation_fields_ensure_dirs_on_local:
+
+        deformation_fields_local_resource_dir:
+
+          state          : 'directory'
+          path           : '{{ deformation_fields_local_resource_directory }}'
+          owner          : '{{ deformation_fields_controller_user }}'
+          group          : '{{ deformation_fields_controller_user }}'
+          mode           : '0755'
+
+    - deformation_fields_bash_aliases_template: '../files/bash_aliases'
+    - deformation_fields_bashrc_template: '../files/bashrc'
+
+  roles:
+    - ../../
+
+
